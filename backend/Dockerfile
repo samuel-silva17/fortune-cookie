@@ -1,4 +1,4 @@
-# Use Debian Bullseye in both stages to ensure GLIBC compatibility
+# Use Debian Bullseye in both stages
 FROM docker.io/library/debian:bullseye-slim AS builder
 
 # Install Rust and build dependencies
@@ -26,10 +26,13 @@ RUN cargo build --release
 # Use the same base image for the runtime
 FROM docker.io/library/debian:bullseye-slim
 
-# Install SSL certificates (required by reqwest for HTTPS)
+# Install SSL certificates
 RUN apt-get update && \
     apt-get install -y ca-certificates && \
     rm -rf /var/lib/apt/lists/*
+
+# Create the log directory
+RUN mkdir -p /var/log/fortune_backend
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/app/target/release/fortune_backend /usr/local/bin/fortune_backend
