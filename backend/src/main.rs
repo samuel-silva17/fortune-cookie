@@ -1,6 +1,5 @@
-use actix_cors::Cors;
 use actix_web::{get, App, HttpServer, Responder, HttpResponse};
-use rand::seq::SliceRandom;
+use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -8,35 +7,42 @@ struct Fortune {
     message: String,
 }
 
+#[derive(Deserialize)]
+struct AdviceSlip {
+    slip: Advice,
+}
+
+#[derive(Deserialize)]
+struct Advice {
+    id: u32,
+    advice: String,
+}
+
 #[get("/fortune")]
 async fn get_fortune() -> impl Responder {
-    let fortunes = vec![
-        "You will have a great day!",
-        "Now is the time to try something new.",
-        "A pleasant surprise is waiting for you.",
-        "Believe in yourself and others will too.",
-        "You are on the right path.",
-    ];
+    // Fetch advice from the external API
+    let res = reqwest::get("https://api.adviceslip.com/advice").await;
 
-    let mut rng = rand::thread_rng();
-    let message = fortunes.choose(&mut rng).unwrap().to_string();
-
-    HttpResponse::Ok().json(Fortune { message })
+    match res {
+        Ok(response) => {
+            if let Ok(json) = response.json::<AdviceSlip>().await {
+                let message = json.slip.advice;
+                HttpResponse::Ok().json(Fortune { message })
+            } else {
+                HttpResponse::InternalServerError().body("Failed to parse advice.")
+            }
+        }
+        Err(_) => {
+            HttpResponse::InternalServerError().body("Failed to fetch advice.")
+        }
+    }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .wrap(
-                Cors::default()
-                    .allow_any_origin()
-                    .allow_any_method()
-                    .allow_any_header()
-            )
-            .service(get_fortune)
-    })
-    .bind(("0.0.0.0", 8080))?
-    .run()
-    .await
+    HttpServer::new(|| App::new().service(get_fortune))
+        .bind(("0.0.0.0", 8080))?
+        .run()
+        .await
 }
+
