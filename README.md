@@ -1,6 +1,6 @@
 # Fortune Cookie
 
-Este projeto é uma aplicação web simples que exibe uma mensagem de fortuna ao usuário ao clicar em um botão. A aplicação é composta por um frontend em Nginx que serve uma página estática e um backend em Rust que fornece as mensagens de fortuna através de uma API. Os contêineres são gerenciados utilizando o Podman.
+Este projeto é uma aplicação web simples que exibe uma mensagem de fortuna ao usuário ao clicar em um botão. A aplicação é composta por um **backend em Rust** que acessa a API externa [https://api.adviceslip.com/advice](https://api.adviceslip.com/advice) para obter as mensagens de fortuna, e um **frontend em Nginx** que serve uma página estática. Os contêineres são gerenciados utilizando o Podman.
 
 ## Índice
 
@@ -8,14 +8,14 @@ Este projeto é uma aplicação web simples que exibe uma mensagem de fortuna ao
 - [Pré-requisitos](#pré-requisitos)
 - [Instruções de Configuração](#instruções-de-configuração)
   - [Clonando o Repositório](#clonando-o-repositório)
-    - [Configurando o Backend](#configurando-o-backend)
-      - [Configurando o Frontend](#configurando-o-frontend)
-      - [Construindo as Imagens Docker](#construindo-as-imagens-docker)
-      - [Executando a Aplicação](#executando-a-aplicação)
-      - [Verificando os Logs](#verificando-os-logs)
-      - [Licença](#licença)
+  - [Configurando o Backend](#configurando-o-backend)
+  - [Configurando o Frontend](#configurando-o-frontend)
+- [Construindo as Imagens Docker](#construindo-as-imagens-docker)
+- [Executando a Aplicação](#executando-a-aplicação)
+- [Verificando os Logs](#verificando-os-logs)
+- [Licença](#licença)
 
-      ---
+---
 
 ## Estrutura do Projeto
 
@@ -35,15 +35,15 @@ Este projeto é uma aplicação web simples que exibe uma mensagem de fortuna ao
 │       └── error.log
 └── frontend
     ├── Dockerfile
-        ├── index.html
-            └── nginx.conf
-            ```
+    ├── index.html
+    └── nginx.conf
+```
 
-            - **backend/**: Código-fonte e Dockerfile do backend em Rust.
-            - **frontend/**: Arquivos estáticos e Dockerfile do frontend em Nginx.
-            - **fortune_logs/**: Diretório para armazenar os logs do backend e frontend.
+- **backend/**: Código-fonte e Dockerfile do backend em Rust.
+- **frontend/**: Arquivos estáticos e Dockerfile do frontend em Nginx.
+- **fortune_logs/**: Diretório para armazenar os logs do backend e frontend.
 
-            ---
+---
 
 ## Pré-requisitos
 
@@ -51,6 +51,9 @@ Certifique-se de ter as seguintes ferramentas instaladas em seu sistema:
 
 - [Podman](https://podman.io/)
 - [Rust](https://www.rust-lang.org/tools/install) (caso queira compilar o backend localmente)
+- [Docker](https://www.docker.com/) (opcional, se preferir usar Docker em vez de Podman)
+
+---
 
 ## Instruções de Configuração
 
@@ -70,26 +73,28 @@ cd fortune-cookie
 1. Navegue até o diretório do backend:
 
    ```bash
-      cd backend
-         ```
+   cd backend
+   ```
 
-         2. Revise o arquivo `Cargo.toml` e as dependências do projeto.
+2. Revise o arquivo `Cargo.toml` e as dependências do projeto.
 
-         3. O arquivo `main.rs` contém o código-fonte do servidor em Rust que fornece as mensagens de fortuna através de uma API REST.
+3. O arquivo `main.rs` contém o código-fonte do servidor em Rust que fornece as mensagens de fortuna através de uma API REST.
+
+4. **API Externa:** O backend em Rust acessa a API [https://api.adviceslip.com/advice](https://api.adviceslip.com/advice) para obter as mensagens de fortuna dinamicamente.
 
 ### Configurando o Frontend
 
 1. Navegue até o diretório do frontend:
 
    ```bash
-      cd frontend
-         ```
+   cd ../frontend
+   ```
 
-         2. O arquivo `index.html` contém a página web que será servida pelo Nginx.
+2. O arquivo `index.html` contém a página web que será servida pelo Nginx.
 
-         3. O arquivo `nginx.conf` é a configuração personalizada do Nginx para servir o frontend.
+3. O arquivo `nginx.conf` é a configuração personalizada do Nginx para servir o frontend.
 
-         ---
+---
 
 ## Construindo as Imagens Docker
 
@@ -100,30 +105,30 @@ Antes de executar a aplicação, é necessário construir as imagens Docker para
 1. Navegue até o diretório do backend:
 
    ```bash
-      cd backend
-         ```
+   cd ../backend
+   ```
 
-         2. Construa a imagem Docker:
+2. Construa a imagem Docker:
 
-            ```bash
-               podman build -t localhost/fortune-backend:latest .
-                  ```
+   ```bash
+   podman build -t localhost/fortune-backend:latest .
+   ```
 
 ### Construindo a Imagem do Frontend
 
 1. Navegue até o diretório do frontend:
 
    ```bash
-      cd frontend
-         ```
+   cd ../frontend
+   ```
 
-         2. Construa a imagem Docker:
+2. Construa a imagem Docker:
 
-            ```bash
-               podman build -t localhost/fortune-frontend:latest .
-                  ```
+   ```bash
+   podman build -t localhost/fortune-frontend:latest .
+   ```
 
-                  ---
+---
 
 ## Executando a Aplicação
 
@@ -143,7 +148,7 @@ mkdir -p fortune_logs/frontend
 Crie o pod chamado `fortune-pod` mapeando as portas necessárias:
 
 ```bash
-podman pod create --name fortune-pod -p 80:80 -p 8080:8080
+podman pod create --name fortune-pod -p 8000:80 -p 8080:8080
 ```
 
 ### Passo 3: Executar o Backend
@@ -153,14 +158,14 @@ Execute o contêiner do backend com o volume para persistência dos logs:
 ```bash
 podman run -d \
   --name backend \
-    --pod fortune-pod \
-      -v $(pwd)/fortune_logs/backend:/var/log/fortune_backend:Z \
-        localhost/fortune-backend:latest
-        ```
+  --pod fortune-pod \
+  -v $(pwd)/fortune_logs/backend:/var/log/fortune_backend:Z \
+  localhost/fortune-backend:latest
+```
 
-        **Explicação:**
+**Explicação:**
 
-        - `-v $(pwd)/fortune_logs/backend:/var/log/fortune_backend:Z` monta o diretório de logs do backend do host no contêiner.
+- `-v $(pwd)/fortune_logs/backend:/var/log/fortune_backend:Z` monta o diretório de logs do backend do host no contêiner.
 
 ### Passo 4: Executar o Frontend
 
@@ -169,21 +174,21 @@ Execute o contêiner do frontend com o volume para persistência dos logs:
 ```bash
 podman run -d \
   --name frontend \
-    --pod fortune-pod \
-      -v $(pwd)/fortune_logs/frontend:/var/log/nginx:Z \
-        localhost/fortune-frontend:latest
-        ```
+  --pod fortune-pod \
+  -v $(pwd)/fortune_logs/frontend:/var/log/nginx:Z \
+  localhost/fortune-frontend:latest
+```
 
-        **Explicação:**
+**Explicação:**
 
-        - `-v $(pwd)/fortune_logs/frontend:/var/log/nginx:Z` monta o diretório de logs do frontend do host no contêiner.
+- `-v $(pwd)/fortune_logs/frontend:/var/log/nginx:Z` monta o diretório de logs do frontend do host no contêiner.
 
 ### Passo 5: Testar a Aplicação
 
 Abra o navegador e acesse:
 
 ```
-http://localhost
+http://localhost:8000
 ```
 
 Clique no botão "Get Your Fortune" para receber uma mensagem de fortuna.
