@@ -4,6 +4,7 @@ use serde::Serialize;
 use log::{info, error};
 use flexi_logger::{Logger, FileSpec, Duplicate};
 use std::io;
+use std::env;
 
 #[derive(Serialize)]
 struct Fortune {
@@ -23,8 +24,12 @@ struct Advice {
 
 #[get("/fortune")]
 async fn get_fortune() -> impl Responder {
+    // Read the API URL from the environment variable or use default
+    let api_url = env::var("API_URL").unwrap_or_else(|_| "https://api.adviceslip.com/advice".to_string());
+    info!("Fetching fortune from: {}", api_url);
+
     // Fetch advice from the external API
-    let res = reqwest::get("https://api.adviceslip.com/advice").await;
+    let res = reqwest::get(&api_url).await;
 
     match res {
         Ok(response) => {
@@ -48,6 +53,7 @@ async fn get_fortune() -> impl Responder {
         }
     }
 }
+
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {

@@ -160,12 +160,14 @@ podman run -d \
   --name backend \
   --pod fortune-pod \
   -v $(pwd)/fortune_logs/backend:/var/log/fortune_backend:Z \
+  -e API_URL=https://api.adviceslip.com/advice \
   localhost/fortune-backend:latest
 ```
 
 **Explicação:**
 
 - `-v $(pwd)/fortune_logs/backend:/var/log/fortune_backend:Z` monta o diretório de logs do backend do host no contêiner.
+- `-e API_URL=https://api.adviceslip.com/advice` define a variável de ambiente `API_URL` com a URL da API externa.
 
 ### Passo 4: Executar o Frontend
 
