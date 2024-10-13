@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fortune Cookie</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        #fortune { font-size: 24px; margin-top: 20px; }
+        button { padding: 10px 20px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Fortune Cookie</h1>
+    <button onclick="getFortune()">Get Your Fortune</button>
+    <div id="fortune"></div>
+    <script>
+          async function getFortune() {
+                    const response = await fetch('http://localhost:8080/fortune');
+                    const data = await response.json();
+                    document.getElementById('fortune').innerText = data.message;
+                }
+    </script>
+</body>
+</html>
